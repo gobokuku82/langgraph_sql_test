@@ -1,0 +1,29 @@
+# LangGraph 및 LangChain 관련
+langgraph==0.5.1
+langchain==0.3.26
+langchain-openai==0.3.25
+langchain-core==0.3.68
+
+# 데이터 처리 및 분석
+pandas==2.2.3
+openpyxl==3.1.5
+numpy==2.2.6
+
+# 시각화
+matplotlib==3.9.2
+seaborn==0.13.2
+plotly==6.2.0
+
+# 웹 애플리케이션
+streamlit==1.45.1
+
+# 환경 변수 관리
+python-dotenv==1.1.1
+
+# OpenAI API
+openai==1.91.0
+
+# 기타 필수 패키지
+requests==2.32.4
+pydantic==2.11.7
+typing-extensions>=4.0.0 
