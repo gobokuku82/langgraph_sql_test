@@ -143,8 +143,8 @@ class PerformanceReportSystem:
         if client_or_region == "전체":
             sql_query = "SELECT * FROM sales_data"
         else:
-            # 실제 컬럼명에 따라 조정 필요
-            sql_query = f"SELECT * FROM sales_data WHERE (상품 LIKE '%{client_or_region}%' OR 분류 LIKE '%{client_or_region}%')"
+            # 실제 컬럼명 사용: ID, 품목, 함량
+            sql_query = f"SELECT * FROM sales_data WHERE (ID LIKE '%{client_or_region}%' OR 품목 LIKE '%{client_or_region}%' OR 함량 LIKE '%{client_or_region}%')"
         
         state["sql_query"] = sql_query
         return state
@@ -155,6 +155,8 @@ class PerformanceReportSystem:
             conn = sqlite3.connect(self.db_file)
             df = pd.read_sql(state["sql_query"], conn)
             conn.close()
+            
+
             
             state["query_result"] = df
         except Exception as e:
@@ -185,8 +187,8 @@ class PerformanceReportSystem:
         if len(numeric_columns) > 0:
             analysis["기본_통계"] = df[numeric_columns].describe().to_dict()
         
-        # 월별 데이터가 있는 경우 분석
-        date_columns = [col for col in df.columns if any(month in str(col) for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])]
+        # 월별 데이터가 있는 경우 분석 (YYYY-MM 형태)
+        date_columns = [col for col in df.columns if str(col).startswith(('2019', '2020', '2021', '2022', '2023', '2024')) and '-' in str(col)]
         if date_columns:
             monthly_data = df[date_columns].sum() if len(date_columns) > 0 else {}
             analysis["월별_분석"] = monthly_data.to_dict() if hasattr(monthly_data, 'to_dict') else {}
@@ -267,8 +269,10 @@ class PerformanceReportSystem:
             needs_review = True
         elif analysis.get("총_레코드_수", 0) == 0:
             needs_review = True
-        elif len(analysis.get("월별_분석", {})) < 3:
+        elif len(analysis.get("월별_분석", {})) == 0:
             needs_review = True
+        else:
+            needs_review = False
         
         state["needs_human_review"] = needs_review
         return state
