@@ -52,6 +52,8 @@ def initialize_session_state():
         st.session_state.chat_history = []
     if 'auto_check_done' not in st.session_state:
         st.session_state.auto_check_done = False
+    if 'system_error' not in st.session_state:
+        st.session_state.system_error = None
 
 def auto_check_systems():
     """시스템 상태를 자동으로 확인합니다."""
@@ -79,11 +81,13 @@ def auto_check_systems():
         import os
         load_dotenv()
         if os.getenv('OPENAI_API_KEY'):
-            st.session_state.system_initialized = True
             from langgraph_system import PerformanceReportSystem
-            st.session_state.system = PerformanceReportSystem()
+            system = PerformanceReportSystem()
+            st.session_state.system = system
+            st.session_state.system_initialized = True
     except Exception as e:
         st.session_state.system_initialized = False
+        st.session_state.system_error = str(e)
     
     st.session_state.auto_check_done = True
 
@@ -108,14 +112,27 @@ def create_database():
 def initialize_system():
     """LangGraph 시스템을 초기화합니다."""
     try:
+        from dotenv import load_dotenv
+        import os
+        load_dotenv()
+        
+        # API 키 확인
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            st.error("OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
+            return False
+        
         from langgraph_system import PerformanceReportSystem
         system = PerformanceReportSystem()
         st.session_state.system = system
         st.session_state.system_initialized = True
+        st.success("AI 시스템이 성공적으로 초기화되었습니다!")
         return True
     except Exception as e:
-        st.error(f"시스템 초기화 오류: {e}")
+        error_msg = f"시스템 초기화 오류: {e}"
+        st.error(error_msg)
         st.session_state.system_initialized = False
+        st.session_state.system_error = str(e)
         return False
 
 def display_data_overview():
@@ -228,6 +245,8 @@ def sidebar():
         st.sidebar.info("🤖 GPT-4o 모델 연결됨")
     else:
         st.sidebar.warning("⚠️ AI 시스템 미준비")
+        if hasattr(st.session_state, 'system_error'):
+            st.sidebar.error(f"오류: {st.session_state.system_error}")
     
     st.sidebar.markdown("---")
     
